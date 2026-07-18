@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1">Visual Analytics Hub</h1>
+        <p class="text-secondary">Explore trends, scan distributions, user activity leaderboard, and classifier accuracies.</p>
+    </div>
+</div>
+
+<!-- Grid Layout for Charts -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Real vs Fake Predictions -->
+    <div class="col-md-6 col-lg-4">
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-gradient-primary"></i>Verdicts Distribution</h5>
+            </div>
+            <div class="d-flex justify-content-center align-items-center" style="height: 280px; position: relative;">
+                <canvas id="verdictChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 2: Monthly predictions activity -->
+    <div class="col-md-6 col-lg-8">
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-gradient-primary"></i>Monthly Scan Volume</h5>
+            </div>
+            <div style="height: 280px; position: relative;">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Chart 3: Active Users Leaderboard -->
+    <div class="col-lg-5">
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h5 class="mb-0"><i class="fas fa-users-viewfinder me-2 text-gradient-primary"></i>Top Scanners Leaderboard</h5>
+            </div>
+            <div style="height: 320px; position: relative;">
+                <canvas id="userLeaderboardChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart 4: Model metrics comparisons -->
+    <div class="col-lg-7">
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h5 class="mb-0"><i class="fas fa-brain me-2 text-gradient-primary"></i>Algorithm Comparison Metrics</h5>
+            </div>
+            <div style="height: 320px; position: relative;">
+                <canvas id="modelComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Determine current theme colors
+    const getChartThemeColors = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+            text: isDark ? '#cbd5e1' : '#475569',
+            grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+            primary: '#6366f1',
+            accent: '#d946ef',
+            success: '#10b981',
+            danger: '#ef4444'
+        };
+    };
+
+    let colors = getChartThemeColors();
+
+    // Listen for theme change events to redraw if needed
+    const observer = new MutationObserver(() => {
+        colors = getChartThemeColors();
+        updateChartsTheme();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // Instantiated charts references
+    let verdictChart, monthlyChart, userChart, comparisonChart;
+
+    // 1. Fetch live metrics from api
+    fetch('/api/predictions_stats')
+        .then(res => res.json())
+        .then(data => {
+            renderVerdicts(data.pie_data);
+            renderMonthly(data.monthly_labels, data.monthly_counts);
+            renderUserLeaderboard(data.user_labels, data.user_counts);
+        })
+        .catch(err => console.error("Error loading analytics data:", err));
+
+    // 2. Load static ML accuracies
+    {% if ml_report %}
+        const mlMetrics = {{ ml_report.metrics | tojson | safe }};
+        renderModelComparison(mlMetrics);
+    {% endif %}
+
+    function renderVerdicts(pieData) {
+        const ctx = document.getElementById('verdictChart').getContext('2d');
+        verdictChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Real', 'Fake'],
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: [colors.success, colors.danger],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: colors.text, font: { family: 'Outfit' } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderMonthly(labels, counts) {
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        monthlyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Job Scans',
+                    data: counts,
+                    borderColor: colors.primary,
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: colors.primary
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text, font: { family: 'Outfit' } }
+                    },
+                    y: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, font: { family: 'Outfit' }, stepSize: 1 },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function renderUserLeaderboard(labels, counts) {
+        const ctx = document.getElementById('userLeaderboardChart').getContext('2d');
+        userChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors.accent,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, font: { family: 'Outfit' }, stepSize: 1 },
+                        beginAtZero: true
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: colors.text, font: { family: 'Outfit' } }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderModelComparison(metrics) {
+        const models = Object.keys(metrics);
+        const accuracyData = models.map(m => metrics[m].accuracy);
+        const precisionData = models.map(m => metrics[m].precision);
+        const recallData = models.map(m => metrics[m].recall);
+        const f1Data = models.map(m => metrics[m].f1_score);
+
+        const ctx = document.getElementById('modelComparisonChart').getContext('2d');
+        comparisonChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: models,
+                datasets: [
+                    { label: 'Accuracy', data: accuracyData, backgroundColor: colors.primary, borderRadius: 4 },
+                    { label: 'Precision', data: precisionData, backgroundColor: colors.accent, borderRadius: 4 },
+                    { label: 'Recall', data: recallData, backgroundColor: '#06b6d4', borderRadius: 4 },
+                    { label: 'F1 Score', data: f1Data, backgroundColor: '#f59e0b', borderRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: colors.text, font: { family: 'Outfit' } }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text, font: { family: 'Outfit' } }
+                    },
+                    y: {
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text, font: { family: 'Outfit' } },
+                        beginAtZero: true,
+                        max: 1.0
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChartsTheme() {
+        if (verdictChart) {
+            verdictChart.options.plugins.legend.labels.color = colors.text;
+            verdictChart.update();
+        }
+        if (monthlyChart) {
+            monthlyChart.options.scales.x.ticks.color = colors.text;
+            monthlyChart.options.scales.y.ticks.color = colors.text;
+            monthlyChart.options.scales.y.grid.color = colors.grid;
+            monthlyChart.update();
+        }
+        if (userChart) {
+            userChart.options.scales.x.ticks.color = colors.text;
+            userChart.options.scales.x.grid.color = colors.grid;
+            userChart.options.scales.y.ticks.color = colors.text;
+            userChart.update();
+        }
+        if (comparisonChart) {
+            comparisonChart.options.plugins.legend.labels.color = colors.text;
+            comparisonChart.options.scales.x.ticks.color = colors.text;
+            comparisonChart.options.scales.y.ticks.color = colors.text;
+            comparisonChart.options.scales.y.grid.color = colors.grid;
+            comparisonChart.update();
+        }
+    }
+});
+</script>
+{% endblock %}

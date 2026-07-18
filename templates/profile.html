@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1">Profile Settings</h1>
+        <p class="text-secondary">Manage your user profile details, email configurations, and security details.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Navigation Tabs on Left -->
+    <div class="col-lg-3">
+        <div class="glass-card p-3">
+            <div class="nav flex-column nav-pills gap-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link text-start active px-3 py-2.5 fs-6" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="true">
+                    <i class="far fa-user me-2"></i>Account Details
+                </button>
+                <button class="nav-link text-start px-3 py-2.5 fs-6" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab" aria-controls="v-pills-security" aria-selected="false">
+                    <i class="fas fa-lock me-2"></i>Security Settings
+                </button>
+                <button class="nav-link text-start text-danger px-3 py-2.5 fs-6" id="v-pills-danger-tab" data-bs-toggle="pill" data-bs-target="#v-pills-danger" type="button" role="tab" aria-controls="v-pills-danger" aria-selected="false">
+                    <i class="fas fa-trash-can me-2"></i>Danger Zone
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content on Right -->
+    <div class="col-lg-9">
+        <div class="tab-content" id="v-pills-tabContent">
+            
+            <!-- Account Details Tab -->
+            <div class="tab-pane fade show active animate-slideDown" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <h4 class="mb-0"><i class="far fa-id-card me-2"></i>Profile Specifications</h4>
+                    </div>
+                    
+                    <form action="{{ url_for('profile') }}" method="POST">
+                        <input type="hidden" name="action" value="update_profile">
+                        
+                        <div class="form-glass-group">
+                            <label class="form-glass-label">Username</label>
+                            <input type="text" class="form-glass-input" value="{{ g.user.username }}" disabled style="cursor: not-allowed; opacity: 0.75;">
+                            <span class="text-muted small d-block mt-1">Username is fixed and cannot be modified.</span>
+                        </div>
+                        
+                        <div class="form-glass-group">
+                            <label for="email" class="form-glass-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-glass-input" value="{{ g.user.email }}" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-glass-primary px-4 py-2">
+                            <i class="fas fa-user-pen me-2"></i>Update Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Security / Password Tab -->
+            <div class="tab-pane fade" id="v-pills-security" role="tabpanel" aria-labelledby="v-pills-security-tab">
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <h4 class="mb-0"><i class="fas fa-key me-2"></i>Update Password</h4>
+                    </div>
+                    
+                    <form action="{{ url_for('profile') }}" method="POST">
+                        <input type="hidden" name="action" value="change_password">
+                        
+                        <div class="form-glass-group">
+                            <label for="old_password" class="form-glass-label">Current Password</label>
+                            <div class="position-relative">
+                                <input type="password" id="old_password" name="old_password" class="form-glass-input" placeholder="Enter current password" required>
+                                <button type="button" class="btn btn-link position-absolute text-muted p-0 toggle-password-btn" data-target="old_password" style="right: 1.25rem; top: 50%; transform: translateY(-50%); border: none; text-decoration: none;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-glass-group">
+                            <label for="new_password" class="form-glass-label">New Password</label>
+                            <div class="position-relative">
+                                <input type="password" id="new_password" name="new_password" class="form-glass-input" placeholder="Enter new secure password" required>
+                                <button type="button" class="btn btn-link position-absolute text-muted p-0 toggle-password-btn" data-target="new_password" style="right: 1.25rem; top: 50%; transform: translateY(-50%); border: none; text-decoration: none;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-glass-group">
+                            <label for="confirm_new" class="form-glass-label">Confirm New Password</label>
+                            <div class="position-relative">
+                                <input type="password" id="confirm_new" name="confirm_new" class="form-glass-input" placeholder="Confirm new password" required>
+                                <button type="button" class="btn btn-link position-absolute text-muted p-0 toggle-password-btn" data-target="confirm_new" style="right: 1.25rem; top: 50%; transform: translateY(-50%); border: none; text-decoration: none;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-glass-primary px-4 py-2">
+                            <i class="fas fa-shield-halved me-2"></i>Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Danger Zone Tab -->
+            <div class="tab-pane fade" id="v-pills-danger" role="tabpanel" aria-labelledby="v-pills-danger-tab">
+                <div class="glass-card border-danger bg-danger bg-opacity-10">
+                    <div class="glass-card-header border-danger">
+                        <h4 class="mb-0 text-danger"><i class="fas fa-triangle-exclamation me-2"></i>Destructive Zone</h4>
+                    </div>
+                    
+                    <p class="text-secondary small">
+                        Deleting your account is permanent. It will instantly remove all your profile credentials, database rows, and scanned job predictions from our records. This cannot be undone.
+                    </p>
+                    
+                    <form action="{{ url_for('profile') }}" method="POST">
+                        <input type="hidden" name="action" value="delete_account">
+                        
+                        <button type="submit" class="btn btn-danger btn-glass-danger confirm-action" data-confirm-message="WARNING: Are you absolutely sure you want to permanently delete your account? All scanning history will be lost.">
+                            <i class="fas fa-user-xmark me-2"></i>Permanently Delete Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

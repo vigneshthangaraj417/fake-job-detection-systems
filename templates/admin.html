@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1">Admin Control Room</h1>
+        <p class="text-secondary">Oversee registered accounts, database logs, uploaded training files, and trigger ML retraining.</p>
+    </div>
+</div>
+
+<!-- Admin Statistics Overview -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ total_users }}</h3>
+                <p>Registered Users</p>
+            </div>
+            <div class="metric-icon-box primary">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ total_predictions }}</h3>
+                <p>Global Checks</p>
+            </div>
+            <div class="metric-icon-box warning">
+                <i class="fas fa-list-check"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ fake_ratio }}%</h3>
+                <p>Fake Job Ratio</p>
+            </div>
+            <div class="metric-icon-box danger">
+                <i class="fas fa-percent"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Navigation Tabs -->
+    <div class="col-12">
+        <div class="glass-card p-0 overflow-hidden">
+            <ul class="nav nav-tabs border-bottom border-light border-opacity-10 px-3 pt-3 gap-2" id="adminTab" role="tablist" style="background: rgba(0,0,0,0.05);">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-3 active fw-semibold" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="true">
+                        <i class="fas fa-user-group me-2"></i>Accounts Management
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-3 fw-semibold" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab" aria-controls="logs" aria-selected="false">
+                        <i class="fas fa-database me-2"></i>Global Predictions Log
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-3 fw-semibold" id="ml-tab" data-bs-toggle="tab" data-bs-target="#ml" type="button" role="tab" aria-controls="ml" aria-selected="false">
+                        <i class="fas fa-gears me-2"></i>ML Model & Dataset Management
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content p-4" id="adminTabContent">
+                
+                <!-- Accounts Management Pane -->
+                <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+                    <h5 class="mb-3 fw-bold text-secondary">Active User Accounts</h5>
+                    <div class="table-glass-wrapper">
+                        <table class="table-glass">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Registered On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td class="fw-semibold">{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge-glass info">Administrator</span>
+                                        {% else %}
+                                        <span class="badge-glass success">Regular User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at[:16] }}</td>
+                                    <td>
+                                        {% if user.id == g.user.id %}
+                                        <span class="text-muted italic small">Logged In</span>
+                                        {% else %}
+                                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-glass-danger confirm-action" data-confirm-message="Are you sure you want to delete this user and all their prediction scan records?">
+                                                <i class="fas fa-user-minus"></i> Delete
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Global Predictions Log Pane -->
+                <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+                    <h5 class="mb-3 fw-bold text-secondary">Master Log of All Checks</h5>
+                    {% if predictions %}
+                    <div class="table-glass-wrapper">
+                        <table class="table-glass">
+                            <thead>
+                                <tr>
+                                    <th>Scanner</th>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Verdict</th>
+                                    <th>Confidence</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in predictions %}
+                                <tr>
+                                    <td class="fw-semibold text-gradient-primary">
+                                        <i class="far fa-user me-1 text-secondary"></i>{{ pred.username if pred.username else 'System Deleted' }}
+                                    </td>
+                                    <td>{{ pred.job_title }}</td>
+                                    <td>{{ pred.company_name if pred.company_name else 'Anonymous' }}</td>
+                                    <td>
+                                        {% if pred.prediction_result == 1 %}
+                                        <span class="badge-glass danger"><i class="fa-solid fa-triangle-exclamation"></i> Fake Job</span>
+                                        {% else %}
+                                        <span class="badge-glass success"><i class="fa-solid fa-circle-check"></i> Real Job</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">{{ pred.confidence_score }}%</td>
+                                    <td class="small">{{ pred.created_at[:16] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open text-muted fs-1 mb-3"></i>
+                        <p class="text-secondary">No predictions have been recorded by the system yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- ML Model Retraining and Dataset Pane -->
+                <div class="tab-pane fade" id="ml" role="tabpanel" aria-labelledby="ml-tab">
+                    <div class="row g-4">
+                        
+                        <!-- Upload CSV panel -->
+                        <div class="col-lg-6">
+                            <div class="p-3 rounded-4" style="background: rgba(0,0,0,0.05); border: 1px solid var(--border-glass);">
+                                <h5 class="fw-bold mb-3"><i class="fas fa-file-csv text-gradient-primary me-2"></i>Append Training Dataset</h5>
+                                <p class="text-secondary small">
+                                    Upload a new job postings CSV dataset. The uploaded CSV must contain the columns: <code>title</code>, <code>description</code>, and <code>fraudulent</code> (where 0=Real, 1=Fake).
+                                </p>
+                                
+                                <form id="model-retrain-form" action="{{ url_for('upload_csv') }}" method="POST" enctype="multipart/form-data" class="mt-4">
+                                    <div class="form-glass-group mb-3">
+                                        <label for="file" class="form-glass-label">Select Dataset File (.csv)</label>
+                                        <input type="file" id="file" name="file" class="form-glass-input" accept=".csv" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-glass-primary w-100 py-3" {% if is_retraining %}disabled{% endif %}>
+                                        <i class="fas fa-cloud-arrow-up me-2"></i>Upload and Retrain Classifiers
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Upload history -->
+                            <div class="mt-4">
+                                <h6 class="fw-bold text-secondary mb-3">Recent File Uploads</h6>
+                                {% if datasets %}
+                                <div class="table-glass-wrapper">
+                                    <table class="table-glass" style="font-size: 0.85rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Filename</th>
+                                                <th>Rows</th>
+                                                <th>By User</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for dataset in datasets %}
+                                            <tr>
+                                                <td class="fw-semibold">{{ dataset.filename }}</td>
+                                                <td>{{ dataset.row_count }}</td>
+                                                <td>{{ dataset.uploaded_by }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="small text-muted italic">No files uploaded yet. System is operating on default Kaggle datasets.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Model Training status dashboard -->
+                        <div class="col-lg-6 border-start border-light border-opacity-10">
+                            <div class="p-3">
+                                <h5 class="fw-bold mb-3"><i class="fas fa-microchip text-gradient-primary me-2"></i>Active AI Model Status</h5>
+                                
+                                {% if ml_report %}
+                                <div class="p-3 rounded mb-4" style="background: rgba(99,102,241,0.08);">
+                                    <span class="text-muted small uppercase">Selected Best Classifier</span>
+                                    <h4 class="text-gradient-primary fw-extrabold mt-1 mb-0">{{ ml_report.best_model }}</h4>
+                                </div>
+                                
+                                <div class="table-glass-wrapper">
+                                    <table class="table-glass" style="font-size: 0.85rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Classifier</th>
+                                                <th>Accuracy</th>
+                                                <th>Precision</th>
+                                                <th>F1 Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for model_name, m in ml_report.metrics.items() %}
+                                            <tr class="{% if model_name == ml_report.best_model %}table-active fw-bold text-primary{% endif %}">
+                                                <td>{{ model_name }}</td>
+                                                <td class="text-success">{{ (m.accuracy * 100) | round(2) }}%</td>
+                                                <td>{{ (m.precision * 100) | round(2) }}%</td>
+                                                <td>{{ (m.f1_score * 100) | round(2) }}%</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fas fa-triangle-exclamation fs-3 mb-2"></i>
+                                    <p class="small">No active machine learning reports. Execute retraining to build models stats.</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

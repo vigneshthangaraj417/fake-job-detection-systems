@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Job Posting - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1">Verify Job Posting</h1>
+        <p class="text-secondary">Evaluate the legitimacy of a job listing using our trained AI classifiers.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Input Form -->
+    <div class="col-lg-7">
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Job Description Details</h4>
+            </div>
+            
+            <form id="job-predict-form" action="{{ url_for('predict') }}" method="POST">
+                <div class="row">
+                    <div class="col-md-6 form-glass-group">
+                        <label for="title" class="form-glass-label">Job Title <span class="text-danger">*</span></label>
+                        <input type="text" id="title" name="title" class="form-glass-input" placeholder="e.g. Remote Data Entry Clerk" required>
+                    </div>
+                    
+                    <div class="col-md-6 form-glass-group">
+                        <label for="company_name" class="form-glass-label">Company Name</label>
+                        <input type="text" id="company_name" name="company_name" class="form-glass-input" placeholder="e.g. Acme Corporation">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 form-glass-group">
+                        <label for="location" class="form-glass-label">Location</label>
+                        <input type="text" id="location" name="location" class="form-glass-input" placeholder="e.g. US, NY, New York">
+                    </div>
+                    
+                    <div class="col-md-6 form-glass-group">
+                        <label for="department" class="form-glass-label">Department</label>
+                        <input type="text" id="department" name="department" class="form-glass-input" placeholder="e.g. Operations">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 form-glass-group">
+                        <label for="employment_type" class="form-glass-label">Employment Type</label>
+                        <select id="employment_type" name="employment_type" class="form-glass-input">
+                            <option value="">Select Type</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Temporary">Temporary</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 form-glass-group">
+                        <label for="required_experience" class="form-glass-label">Experience Level</label>
+                        <select id="required_experience" name="required_experience" class="form-glass-input">
+                            <option value="">Select Experience</option>
+                            <option value="Entry level">Entry level</option>
+                            <option value="Associate">Associate</option>
+                            <option value="Mid-Senior level">Mid-Senior level</option>
+                            <option value="Director">Director</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Internship">Internship</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 form-glass-group">
+                        <label for="salary_info" class="form-glass-label">Salary / Compensation</label>
+                        <input type="text" id="salary_info" name="salary_info" class="form-glass-input" placeholder="e.g. $4000-$5000 / week">
+                    </div>
+                </div>
+                
+                <div class="form-glass-group">
+                    <label for="description" class="form-glass-label">Job Description <span class="text-danger">*</span></label>
+                    <textarea id="description" name="description" rows="5" class="form-glass-input" placeholder="Paste the complete job description text here..." required></textarea>
+                </div>
+                
+                <div class="form-glass-group">
+                    <label for="requirements" class="form-glass-label">Requirements</label>
+                    <textarea id="requirements" name="requirements" rows="3" class="form-glass-input" placeholder="Experience required, programming languages, typing speeds, etc..."></textarea>
+                </div>
+                
+                <div class="form-glass-group">
+                    <label for="benefits" class="form-glass-label">Benefits</label>
+                    <textarea id="benefits" name="benefits" rows="2" class="form-glass-input" placeholder="Insurance, leave policy, allowances, flexible hours..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-glass-primary w-100 py-3 mt-2">
+                    <i class="fas fa-shield-halved me-2"></i>Analyze Job Listing
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Right Column: Results / Guide -->
+    <div class="col-lg-5">
+        {% if result %}
+        <!-- Prediction Verdict Card -->
+        <div class="glass-card {% if result.label == 1 %}border-danger{% else %}border-success{% endif %}" style="animation: slideDown 0.4s ease-out;">
+            <div class="glass-card-header">
+                <h4 class="mb-0"><i class="fas fa-square-poll-vertical me-2"></i>Analysis Verdict</h4>
+                <span class="badge-glass {% if result.label == 1 %}danger{% else %}success{% endif %}">
+                    {% if result.label == 1 %}
+                    <i class="fas fa-triangle-exclamation"></i> High Risk
+                    {% else %}
+                    <i class="fas fa-circle-check"></i> Safe / Legit
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="text-center py-4">
+                <span class="text-muted uppercase small tracking-wider block mb-1">AI Classification</span>
+                <h2 class="{% if result.label == 1 %}text-danger{% else %}text-success{% endif %} fw-extrabold mb-3">
+                    {{ result.result_text }}
+                </h2>
+                
+                <div class="mx-auto" style="max-width: 300px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                        <span>Confidence Score:</span>
+                        <span class="fw-bold">{{ result.confidence }}%</span>
+                    </div>
+                    <div class="progress-glass">
+                        <div class="progress-glass-bar {% if result.label == 1 %}bg-danger{% endif %}" style="width: {{ result.confidence }}%; {% if result.label == 1 %}background: linear-gradient(90deg, #ef4444 0%, #f43f5e 100%);{% endif %}"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-top border-light border-opacity-10 pt-4 mt-2">
+                <h5 class="mb-3 fw-bold text-secondary">Explanation & Details:</h5>
+                <div id="explanation-container" class="small lh-base text-secondary">
+                    <!-- Javascript will load parsed HTML here -->
+                    {{ result.explanation }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Educational Security Advice Card -->
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h4 class="mb-0"><i class="fas fa-circle-info me-2"></i>How to Spot Job Scams</h4>
+            </div>
+            <p class="text-secondary small">
+                Scammers target active job hunters using fake roles. Look out for these signs before applying:
+            </p>
+            
+            <ul class="list-unstyled d-flex flex-column gap-3 mt-3">
+                <li class="d-flex gap-3 align-items-start">
+                    <div class="metric-icon-box danger px-2 py-1 rounded fs-6" style="width: 35px; height: 35px;">
+                        <i class="fas fa-money-bill-transfer"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Upfront Training Fees</h6>
+                        <span class="text-muted small d-block mt-1">Legitimate employers never charge candidates money to apply, join, buy laptops, or undergo "mandatory registration".</span>
+                    </div>
+                </li>
+                <li class="d-flex gap-3 align-items-start">
+                    <div class="metric-icon-box danger px-2 py-1 rounded fs-6" style="width: 35px; height: 35px;">
+                        <i class="fas fa-message"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">External Messaging Channels</h6>
+                        <span class="text-muted small d-block mt-1">Interviews conducted exclusively on WhatsApp, Telegram, or Google Hangouts are major red flags.</span>
+                    </div>
+                </li>
+                <li class="d-flex gap-3 align-items-start">
+                    <div class="metric-icon-box danger px-2 py-1 rounded fs-6" style="width: 35px; height: 35px;">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Wire Transfers or Reshipping</h6>
+                        <span class="text-muted small d-block mt-1">If the job description mentions receiving money in personal accounts, purchasing gift cards, or reforwarding packages, it is a money mule scam.</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('explanation-container');
+        if (container) {
+            let markdownText = container.innerHTML.trim();
+            
+            // Basic markdown parsing for HTML tags
+            // Replace newlines with <br>
+            markdownText = markdownText.replace(/\n/g, '<br>');
+            
+            // Replace **bold** with <strong>bold</strong>
+            markdownText = markdownText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Parse bullet points starting with -
+            markdownText = markdownText.replace(/<br>- /g, '<br>&bull; ');
+            
+            // Format bullet items containing emoji
+            markdownText = markdownText.replace(/🚩/g, '<span class="text-danger me-1">🚩</span>');
+            markdownText = markdownText.replace(/✅/g, '<span class="text-success me-1">✅</span>');
+            markdownText = markdownText.replace(/⚠️/g, '<span class="text-warning me-1">⚠️</span>');
+            
+            container.innerHTML = markdownText;
+        }
+    });
+</script>
+{% endblock %}

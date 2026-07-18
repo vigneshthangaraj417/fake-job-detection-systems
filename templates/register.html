@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Fake Job Posting Detection System{% endblock %}
+
+{% block main_content %}
+<div class="auth-container">
+    <div class="glass-card auth-card">
+        <div class="auth-header">
+            <i class="fas fa-user-plus text-gradient-primary"></i>
+            <h2 class="text-gradient-primary">Create Account</h2>
+            <p class="text-muted">Register to evaluate job offers using AI</p>
+        </div>
+        
+        <form action="{{ url_for('register') }}" method="POST">
+            <div class="form-glass-group">
+                <label for="username" class="form-glass-label">Username</label>
+                <div class="position-relative">
+                    <input type="text" id="username" name="username" class="form-glass-input" placeholder="Choose a username" required autofocus>
+                    <i class="fas fa-user position-absolute text-muted" style="right: 1.25rem; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                </div>
+            </div>
+            
+            <div class="form-glass-group">
+                <label for="email" class="form-glass-label">Email Address</label>
+                <div class="position-relative">
+                    <input type="email" id="email" name="email" class="form-glass-input" placeholder="Enter your email" required>
+                    <i class="fas fa-envelope position-absolute text-muted" style="right: 1.25rem; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                </div>
+            </div>
+            
+            <div class="form-glass-group">
+                <label for="password" class="form-glass-label">Password</label>
+                <div class="position-relative">
+                    <input type="password" id="password" name="password" class="form-glass-input" placeholder="Create a secure password" required>
+                    <button type="button" class="btn btn-link position-absolute text-muted p-0 toggle-password-btn" data-target="password" style="right: 1.25rem; top: 50%; transform: translateY(-50%); border: none; text-decoration: none;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-glass-group">
+                <label for="confirm_password" class="form-glass-label">Confirm Password</label>
+                <div class="position-relative">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-glass-input" placeholder="Confirm your password" required>
+                    <button type="button" class="btn btn-link position-absolute text-muted p-0 toggle-password-btn" data-target="confirm_password" style="right: 1.25rem; top: 50%; transform: translateY(-50%); border: none; text-decoration: none;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-glass-primary w-100 py-3 mt-3">
+                <i class="fas fa-user-check me-2"></i>Create Account
+            </button>
+        </form>
+        
+        <div class="text-center mt-4 border-top border-light border-opacity-10 pt-3">
+            <p class="text-muted mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-gradient-primary fw-bold" style="text-decoration: none;">Sign In here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

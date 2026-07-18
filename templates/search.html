@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Search History - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h2 mb-1">Search Scanned Jobs</h1>
+        <p class="text-secondary">Review and filter your past predictions history database.</p>
+    </div>
+</div>
+
+<!-- Glass Search Filter Bar -->
+<div class="glass-card mb-4">
+    <form action="{{ url_for('search') }}" method="GET">
+        <div class="row align-items-end g-3">
+            <div class="col-md-6 form-glass-group mb-0">
+                <label for="q" class="form-glass-label">Search Query</label>
+                <div class="position-relative">
+                    <input type="text" id="q" name="q" class="form-glass-input" placeholder="Search by job title, company, location..." value="{{ query }}">
+                    <i class="fas fa-search position-absolute text-muted" style="right: 1.25rem; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                </div>
+            </div>
+            
+            <div class="col-md-4 form-glass-group mb-0">
+                <label class="form-glass-label">Verdict Filter</label>
+                <select name="type" class="form-glass-input">
+                    <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Results</option>
+                    <option value="real" {% if filter_type == 'real' %}selected{% endif %}>Real Jobs Only</option>
+                    <option value="fake" {% if filter_type == 'fake' %}selected{% endif %}>Fake Jobs Only</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2 mb-0">
+                <button type="submit" class="btn btn-glass-primary w-100 py-3">
+                    <i class="fas fa-filter me-2"></i>Filter
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Search Results -->
+<div class="glass-card">
+    <div class="glass-card-header">
+        <h4 class="mb-0">
+            <i class="fas fa-list-check me-2"></i>
+            {% if query or filter_type != 'all' %}Search Results{% else %}All Scanned Predictions{% endif %}
+        </h4>
+        <span class="badge-glass info">{{ predictions | length }} matching</span>
+    </div>
+    
+    {% if predictions %}
+    <div class="accordion accordion-flush" id="searchAccordion">
+        {% for pred in predictions %}
+        <div class="accordion-item bg-transparent border-bottom border-light border-opacity-10 py-2">
+            <h2 class="accordion-header bg-transparent" id="heading-{{ pred.id }}">
+                <button class="accordion-button collapsed bg-transparent text-primary py-3 px-0 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ pred.id }}" aria-expanded="false" aria-controls="collapse-{{ pred.id }}" style="box-shadow: none;">
+                    <div class="row w-100 align-items-center g-2 m-0 text-start">
+                        <div class="col-md-4 fw-bold">
+                            {{ pred.job_title }}
+                        </div>
+                        <div class="col-md-3 text-secondary">
+                            <i class="far fa-building me-2"></i>{{ pred.company_name if pred.company_name else 'Anonymous' }}
+                        </div>
+                        <div class="col-md-3">
+                            {% if pred.prediction_result == 1 %}
+                            <span class="badge-glass danger"><i class="fas fa-triangle-exclamation"></i> Fake Job</span>
+                            {% else %}
+                            <span class="badge-glass success"><i class="fas fa-circle-check"></i> Real Job</span>
+                            {% endif %}
+                            <span class="text-gradient-primary fw-bold ms-2">{{ pred.confidence_score }}%</span>
+                        </div>
+                        <div class="col-md-2 text-muted small text-md-end">
+                            {{ pred.created_at[:10] }}
+                        </div>
+                    </div>
+                </button>
+            </h2>
+            
+            <div id="collapse-{{ pred.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ pred.id }}" data-bs-parent="#searchAccordion">
+                <div class="accordion-body px-0 text-secondary lh-base">
+                    <div class="row g-4 mt-1">
+                        <!-- Left Info -->
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-primary border-bottom border-light border-opacity-10 pb-2 mb-2">Job Context Details</h6>
+                            <div class="mb-2"><strong>Location:</strong> {{ pred.location if pred.location else 'Not specified' }}</div>
+                            <div class="mb-2"><strong>Salary:</strong> {{ pred.salary_info if pred.salary_info else 'Not specified' }}</div>
+                            <div class="mb-2"><strong>Employment Type:</strong> {{ pred.employment_type if pred.employment_type else 'Not specified' }}</div>
+                            <div class="mt-3">
+                                <strong>Description Summary:</strong>
+                                <p class="small text-muted mt-1 mb-0" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ pred.description }}
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Right AI explanation -->
+                        <div class="col-md-6 border-start border-light border-opacity-10">
+                            <h6 class="fw-bold text-primary border-bottom border-light border-opacity-10 pb-2 mb-2">AI Diagnostic Report</h6>
+                            <div class="explanation-md small bg-light bg-opacity-10 p-3 rounded" data-raw-explanation="{{ pred.explanation }}">
+                                {{ pred.explanation }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-magnifying-glass-minus text-muted fs-1 mb-3 d-block"></i>
+        <p class="text-secondary mb-0">No predictions matching your search query were found.</p>
+        <a href="{{ url_for('search') }}" class="btn btn-glass mt-3">Reset Filters</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const explanations = document.querySelectorAll('.explanation-md');
+        explanations.forEach(container => {
+            let markdownText = container.getAttribute('data-raw-explanation') || container.innerHTML.trim();
+            
+            // Basic markdown parser
+            markdownText = markdownText.replace(/\n/g, '<br>');
+            markdownText = markdownText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            markdownText = markdownText.replace(/<br>- /g, '<br>&bull; ');
+            markdownText = markdownText.replace(/🚩/g, '<span class="text-danger me-1">🚩</span>');
+            markdownText = markdownText.replace(/✅/g, '<span class="text-success me-1">✅</span>');
+            markdownText = markdownText.replace(/⚠️/g, '<span class="text-warning me-1">⚠️</span>');
+            
+            container.innerHTML = markdownText;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Fake Job Posting Detection System{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-md-8">
+        <h1 class="h2 mb-1">Hello, {{ g.user.username }}!</h1>
+        <p class="text-secondary mb-0">Here is the security health status of your job searches today.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('predict') }}" class="btn btn-glass-primary">
+            <i class="fas fa-wand-magic-sparkles me-2"></i>New Prediction Check
+        </a>
+    </div>
+</div>
+
+<!-- Metric Counters Row -->
+<div class="row g-4 mb-4">
+    <!-- Card 1: Total -->
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ total_predictions }}</h3>
+                <p>Total Scanned</p>
+            </div>
+            <div class="metric-icon-box primary">
+                <i class="fas fa-magnifying-glass"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Card 2: Real -->
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ real_predictions }}</h3>
+                <p>Real Postings</p>
+            </div>
+            <div class="metric-icon-box success">
+                <i class="fas fa-circle-check"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Card 3: Fake -->
+    <div class="col-md-4">
+        <div class="glass-card metric-card mb-0">
+            <div class="metric-info">
+                <h3>{{ fake_predictions }}</h3>
+                <p>Scams Blocked</p>
+            </div>
+            <div class="metric-icon-box danger">
+                <i class="fas fa-circle-exclamation"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Main Column: Recent predictions activity -->
+    <div class="col-lg-8">
+        <div class="glass-card h-100">
+            <div class="glass-card-header">
+                <h4 class="mb-0"><i class="fas fa-history me-2"></i>Recent Predictions History</h4>
+                <a href="{{ url_for('search') }}" class="btn btn-glass btn-sm">View All</a>
+            </div>
+            
+            {% if recent_predictions %}
+            <div class="table-glass-wrapper">
+                <table class="table-glass">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>Result</th>
+                            <th>Confidence</th>
+                            <th>Scanned On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in recent_predictions %}
+                        <tr>
+                            <td class="fw-semibold">{{ pred.job_title }}</td>
+                            <td>{{ pred.company_name if pred.company_name else '<span class="text-muted italic">Anonymous</span>' | safe }}</td>
+                            <td>
+                                {% if pred.prediction_result == 1 %}
+                                <span class="badge-glass danger"><i class="fa-solid fa-triangle-exclamation"></i> Fake Job</span>
+                                {% else %}
+                                <span class="badge-glass success"><i class="fa-solid fa-circle-check"></i> Real Job</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold text-gradient-primary">{{ pred.confidence_score }}%</td>
+                            <td class="small">{{ pred.created_at[:16] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open text-muted fs-1 mb-3 d-block"></i>
+                <p class="text-secondary mb-0">No job predictions made yet. Try scanning your first job details.</p>
+                <a href="{{ url_for('predict') }}" class="btn btn-glass-primary mt-3">Scan Now</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Sidebar Column: Model details & quick navigations -->
+    <div class="col-lg-4">
+        <div class="d-flex flex-column gap-4">
+            
+            <!-- Quick Actions Card -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h4 class="mb-0"><i class="fas fa-compass me-2"></i>Quick Navigation</h4>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('predict') }}" class="btn btn-glass text-start py-3">
+                        <i class="fas fa-shield-halved text-gradient-primary me-2 fs-5"></i>
+                        <span>Job Scanner</span>
+                    </a>
+                    <a href="{{ url_for('analytics') }}" class="btn btn-glass text-start py-3">
+                        <i class="fas fa-chart-line text-gradient-primary me-2 fs-5"></i>
+                        <span>Interactive Charts</span>
+                    </a>
+                    <a href="{{ url_for('search') }}" class="btn btn-glass text-start py-3">
+                        <i class="fas fa-magnifying-glass text-gradient-primary me-2 fs-5"></i>
+                        <span>Search Database</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- ML Report info card -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h4 class="mb-0"><i class="fas fa-brain me-2"></i>Active AI Model</h4>
+                </div>
+                {% if ml_report %}
+                <div class="mb-3">
+                    <span class="text-muted small uppercase block mb-1">Current Classifier</span>
+                    <h5 class="text-gradient-primary fw-bold mb-0">{{ ml_report.best_model }}</h5>
+                </div>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light bg-opacity-10 text-center">
+                            <span class="text-muted small d-block">Dataset Size</span>
+                            <span class="fw-bold">{{ ml_report.dataset_size }} rows</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-light bg-opacity-10 text-center">
+                            <span class="text-muted small d-block">Test Split</span>
+                            <span class="fw-bold">{{ ml_report.test_size }} rows</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {% set metrics_dict = ml_report.metrics[ml_report.best_model] %}
+                <div class="d-flex justify-content-between align-items-center mb-2 small border-bottom border-light border-opacity-10 pb-1">
+                    <span>Model Accuracy:</span>
+                    <span class="fw-bold text-success">{{ (metrics_dict.accuracy * 100) | round(2) }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2 small border-bottom border-light border-opacity-10 pb-1">
+                    <span>Precision:</span>
+                    <span class="fw-bold text-gradient-primary">{{ (metrics_dict.precision * 100) | round(2) }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-0 small">
+                    <span>F1 Score:</span>
+                    <span class="fw-bold text-gradient-primary">{{ (metrics_dict.f1_score * 100) | round(2) }}%</span>
+                </div>
+                {% else %}
+                <div class="text-center py-3 text-muted">
+                    <i class="fas fa-triangle-exclamation fs-3 mb-2"></i>
+                    <p class="small mb-0">No active training report. Model is operating on standard fallback settings.</p>
+                </div>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

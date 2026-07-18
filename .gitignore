@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Project-specific ignores
+database/database.db
+uploads/*
+!uploads/.gitkeep
+trained_model/*.pkl
+trained_model/training_report.json
+.agents/
+.gemini/

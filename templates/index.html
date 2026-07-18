@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Fake Job Posting Detection System - Protect Your Career{% endblock %}
+
+{% block main_content %}
+<div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="row align-items-center justify-content-center text-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="badge-glass info mb-3">
+                    <i class="fas fa-microchip me-1"></i> Powered by Advanced Machine Learning
+                </div>
+                <h1 class="hero-title">AI-Based Fake Job Posting Detection System</h1>
+                <p class="hero-subtitle">
+                    Safeguard your job search. Our secure AI engine cross-references and evaluates job offers in real-time, identifying high-risk scams, phishing attempts, and fraudulent postings with high accuracy.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('register') }}" class="btn btn-glass-primary px-5 py-3 fs-5">
+                        <i class="fas fa-circle-play me-2"></i>Get Started Free
+                    </a>
+                    <a href="#about" class="btn btn-glass px-5 py-3 fs-5">
+                        <i class="fas fa-circle-info me-2"></i>Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Description Section -->
+    <section id="about" class="py-5">
+        <div class="glass-card">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h2 class="mb-3 text-gradient-primary">Combatting Employment Fraud</h2>
+                    <p class="text-secondarylead">
+                        Job scams have become highly sophisticated, targeting fresh graduates and career changers. Fraudulent postings often seek to steal personal identities, gather bank credentials, or charge illegal upfront "fees".
+                    </p>
+                    <p class="text-secondary">
+                        Our platform employs <strong>Supervised Machine Learning Classifiers</strong> trained on thousands of real and fake job postings. By applying Natural Language Processing (NLP) techniques, the system extracts critical text features from job descriptions, salaries, benefits, and requirements to deliver a fast security assessment.
+                    </p>
+                </div>
+                <div class="col-lg-5 text-center mt-4 mt-lg-0">
+                    <div class="p-4 rounded-4" style="background: var(--primary-glow); border: 1px solid var(--border-glass);">
+                        <i class="fas fa-shield-cat text-gradient-primary" style="font-size: 8rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="py-5">
+        <h2 class="text-center mb-5 fw-extrabold text-gradient-primary">Key Core Features</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="glass-card h-100">
+                    <div class="metric-icon-box primary mb-4">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h4 class="mb-3">Instant Prediction</h4>
+                    <p class="text-secondary mb-0">Fill in the job details (title, description, salary, company) and receive an instant probability analysis of the listing's legitimacy.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card h-100">
+                    <div class="metric-icon-box success mb-4">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h4 class="mb-3">Explainable AI</h4>
+                    <p class="text-secondary mb-0">Don't just trust a score. Our system generates detailed breakdowns highlighting specific red flags (payment transfers, telegram channels, upfront fees).</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card h-100">
+                    <div class="metric-icon-box warning mb-4">
+                        <i class="fas fa-chart-simple"></i>
+                    </div>
+                    <h4 class="mb-3">Visual Analytics</h4>
+                    <p class="text-secondary mb-0">View system-wide trends, prediction histories, metrics comparisons, and real-time accuracy updates through interactive Chart.js graphs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ML Pipeline Flow -->
+    <section class="py-5">
+        <div class="glass-card text-center">
+            <h2 class="mb-4 text-gradient-primary">Under the Hood: Machine Learning Pipeline</h2>
+            <p class="text-secondary max-width-600 mx-auto mb-5">
+                Our model operates on a rigorous Natural Language Processing (NLP) framework. Explore the steps taken from dataset upload to final prediction.
+            </p>
+            
+            <div class="row g-3 justify-content-center align-items-center">
+                <div class="col-md-2">
+                    <div class="p-3 rounded-3" style="background: var(--bg-glass); border: 1px solid var(--border-glass);">
+                        <i class="fas fa-database text-gradient-primary fs-3 mb-2"></i>
+                        <h6 class="mb-0">1. Data Load</h6>
+                    </div>
+                </div>
+                <div class="col-1 d-none d-md-block"><i class="fas fa-arrow-right text-muted"></i></div>
+                
+                <div class="col-md-2">
+                    <div class="p-3 rounded-3" style="background: var(--bg-glass); border: 1px solid var(--border-glass);">
+                        <i class="fas fa-filter text-gradient-primary fs-3 mb-2"></i>
+                        <h6 class="mb-0">2. Text Clean</h6>
+                    </div>
+                </div>
+                <div class="col-1 d-none d-md-block"><i class="fas fa-arrow-right text-muted"></i></div>
+                
+                <div class="col-md-2">
+                    <div class="p-3 rounded-3" style="background: var(--bg-glass); border: 1px solid var(--border-glass);">
+                        <i class="fas fa-spell-check text-gradient-primary fs-3 mb-2"></i>
+                        <h6 class="mb-0">3. TF-IDF Vec</h6>
+                    </div>
+                </div>
+                <div class="col-1 d-none d-md-block"><i class="fas fa-arrow-right text-muted"></i></div>
+                
+                <div class="col-md-2">
+                    <div class="p-3 rounded-3" style="background: var(--bg-glass); border: 1px solid var(--border-glass);">
+                        <i class="fas fa-brain text-gradient-primary fs-3 mb-2"></i>
+                        <h6 class="mb-0">4. Train & Select</h6>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comparison Classifiers -->
+            <div class="mt-5 pt-3 border-top border-light border-opacity-10">
+                <p class="text-muted small uppercase tracking-wider mb-3">Algorithms Compared Automatically</p>
+                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                    <span class="badge-glass info">Logistic Regression</span>
+                    <span class="badge-glass info">Naive Bayes</span>
+                    <span class="badge-glass info">Random Forest</span>
+                    <span class="badge-glass info">Decision Tree</span>
+                    <span class="badge-glass info">Support Vector Machine (SVM)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
